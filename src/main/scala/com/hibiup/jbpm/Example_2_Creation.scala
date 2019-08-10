@@ -27,9 +27,14 @@ object Example_2_Creation {
         ks.getResources.newByteArrayResource(xml.getBytes())
     }}
     
-    def save(filePath:String)(implicit ks:KieServices):Kleisli[IO, Resource, Unit] = Kleisli{ resource => IO{
+    def save(groupId:String, artifactId:String, version:String, filePath:String)(implicit ks:KieServices):Kleisli[IO, Resource, Unit] = Kleisli{ resource => IO{
         resource.setSourcePath(filePath)
-        ks.newKieFileSystem().write(resource)
+        val kFileSystem = ks.newKieFileSystem()
+        kFileSystem.write(resource)
+        //val releaseId = ks.newReleaseId(groupId, artifactId, version)
+        //kFileSystem.generateAndWritePomXML(releaseId)
+        //ks.newKieBuilder(kFileSystem).buildAll()
+        //ks.newKieContainer(releaseId).newKieSession().startProcess(s"""$groupId.$artifactId""")
     }}
     
     import Example_1_Evaluation.{environment, manager, engine, createSession, closeSession, destroyEngine}
@@ -51,7 +56,14 @@ object Example_2_Creation {
         }
     )
     
-    def _main = process.map{(environment andThen manager andThen engine).map{ case (m, e) => {
+    def _main = process.map{resource => (environment andThen manager andThen engine).map{ case (m, e) => {
+        /** Save to file*/
+        save("com.hibiup","HelloBPMN","1.0", "src/main/resources/flows/Example_2_Creation.bpmn").run(resource).attempt.unsafeRunSync match {
+            case Right(r) => println(s"Save successfully")
+            case Left(t) => t.printStackTrace()
+        }
+        
+        /** Run process */
         createSession.map(session => {
           // TODO:
           session.startProcess("com.hibiup.HelloBPMN")
@@ -60,7 +72,7 @@ object Example_2_Creation {
         }.map(_ =>
             destroyEngine(m)
         )).run(e)
-    }}.run(_)}
+    }}.run(resource)}
       .unsafeRunSync()
       .unsafeRunSync()
       .unsafeRunSync()
