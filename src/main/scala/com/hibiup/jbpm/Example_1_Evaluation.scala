@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.Logger
 import javax.persistence.Persistence
 import org.kie.api.KieServices
 import org.kie.api.event.process.{ProcessCompletedEvent, ProcessEventListener, ProcessNodeLeftEvent, ProcessNodeTriggeredEvent, ProcessStartedEvent, ProcessVariableChangedEvent}
-import org.kie.api.io.ResourceType
+import org.kie.api.io.{Resource, ResourceType}
 import org.kie.api.runtime.KieSession
 import org.kie.api.runtime.manager.{RuntimeEngine, RuntimeEnvironment, RuntimeEnvironmentBuilder, RuntimeManager, RuntimeManagerFactory}
 import org.kie.api.task.{TaskService, UserGroupCallback}
@@ -33,7 +33,11 @@ object Example_1_Evaluation {
       *
       * 1) 定义环境参数，其中包括要载入的流程定义文件的存储位置。
       * */
-    val environment: Kleisli[IO, String, RuntimeEnvironment] = Kleisli{resourcePath => IO{
+    val load:Kleisli[IO, String, Resource] = Kleisli{filePath => IO{
+        KieServices.Factory.get.getResources.newClassPathResource(filePath)
+    }}
+    
+    val environment: Kleisli[IO, Resource, RuntimeEnvironment] = Kleisli{resource => IO{
         val userGroupCallback: UserGroupCallback = new UserGroupCallback {
             private val userGroup = Map(
                 "Administrator" -> List("Administrators").asJava,
@@ -51,7 +55,7 @@ object Example_1_Evaluation {
             .newDefaultBuilder()
 
         builder.entityManagerFactory(emf)
-            .addAsset(KieServices.Factory.get.getResources.newClassPathResource(resourcePath), ResourceType.BPMN2)
+            .addAsset(resource, ResourceType.BPMN2)
             .userGroupCallback(userGroupCallback)
             .get()
     } }
@@ -78,7 +82,7 @@ object Example_1_Evaluation {
         (manager, manager.getRuntimeEngine(EmptyContext.get()))
     }}
 
-    def init: Kleisli[IO, String, (RuntimeManager, RuntimeEngine)] = environment andThen manager andThen engine
+    def init: Kleisli[IO, String, (RuntimeManager, RuntimeEngine)] = load andThen environment andThen manager andThen engine
 
     /**
       * 4) 从 RuntimeEngine 中获得已经初始化了的 Session
