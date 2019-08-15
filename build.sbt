@@ -7,6 +7,8 @@ lazy val dependenciesManager = new {
     val h2Version = "1.4.199"
     val hibernateVersion = "5.4.4.Final"
     val narayanaJtaVersion = "5.9.5.Final"
+    val common_ioVersion = "2.6"
+    val freemarkerVersion = "2.3.28"
 
     val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
     val h2 = "com.h2database" % "h2" % h2Version % Test
@@ -24,8 +26,13 @@ lazy val dependenciesManager = new {
     val jBPM_flow = "org.jbpm" % "jbpm-flow" % jBPMVersion
     val jBPM_runtime_manager = "org.jbpm" % "jbpm-runtime-manager" % jBPMVersion
     val jBPM_human_task_core = "org.jbpm" % "jbpm-human-task-core" % jBPMVersion
+    val jBPM_kie_services = "org.jbpm" % "jbpm-kie-services" % jBPMVersion
+    val jBPM_services_api = "org.jbpm" % "jbpm-services-api" % jBPMVersion
+    val jBPM_shared_services = "org.jbpm" % "jbpm-shared-services" % jBPMVersion
     val hibernate_entitymanager = "org.hibernate" % "hibernate-entitymanager" % hibernateVersion
     val narayanaJta = "org.jboss.narayana.jta" % "narayana-jta" % narayanaJtaVersion
+    val common_io = "commons-io" % "commons-io" % common_ioVersion
+    val freemarker = "org.freemarker" % "freemarker" % freemarkerVersion
 }
 
 lazy val dependencies = Seq(
@@ -41,9 +48,13 @@ lazy val dependencies = Seq(
     dependenciesManager.jBPM_audit,
     dependenciesManager.jBPM_flow,
     dependenciesManager.jBPM_human_task_core,
+    dependenciesManager.jBPM_kie_services exclude("org.freemarker", "freemarker"),
+    dependenciesManager.jBPM_services_api,
+    dependenciesManager.jBPM_shared_services,
     dependenciesManager.jBPM_runtime_manager,
     dependenciesManager.hibernate_entitymanager,
     dependenciesManager.narayanaJta,
+    dependenciesManager.freemarker,
     /** 
       * kie_test_util 提供了数据库初始化函数 PersistenceUtil.setupPoolingDataSource() 
       * */
@@ -61,6 +72,7 @@ lazy val dependencies = Seq(
       * */
     dependenciesManager.jBPM_test,
     // dependenciesManager.jBPM_test_util
+    dependenciesManager.common_io
 )
 
 lazy val jBPMExamples = project.in(file("."))

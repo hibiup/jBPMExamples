@@ -22,11 +22,31 @@
       <extensionElements>
         <tns:onEntry-script scriptFormat="http://www.java.com/java">
           <onEntry-script>
-            <tns:script>
-              <script>java.util.Map contentParam = new java.util.HashMap();
+            <onEntry-script>
+              <onEntry-script>
+                <onEntry-script>
+                  <onEntry-script>
+                    <onEntry-script>
+                      <tns:script>
+                        <script>
+                          <script>
+                            <script>
+                              <script>
+                                <script>
+                                  <script>java.util.Map contentParam = new java.util.HashMap();
 contentParam.put("reason", reason);
 kcontext.setVariable("content", contentParam);</script>
-            </tns:script>
+                                </script>
+                              </script>
+                            </script>
+                          </script>
+                        </script>
+                      </tns:script>
+                    </onEntry-script>
+                  </onEntry-script>
+                </onEntry-script>
+              </onEntry-script>
+            </onEntry-script>
           </onEntry-script>
         </tns:onEntry-script>
       </extensionElements>
@@ -56,10 +76,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_2_CommentInput</targetRef>
         <assignment id="DIA_2_2_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[Please perform a self-evalutation.]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_2_CommentInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -67,10 +89,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_2_SkippableInput</targetRef>
         <assignment id="DIA_2_3_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[false]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_2_SkippableInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -78,10 +102,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_2_TaskNameInput</targetRef>
         <assignment id="DIA_2_4_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[Performance Evaluation]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_2_TaskNameInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -92,7 +118,8 @@ kcontext.setVariable("content", contentParam);</script>
       <potentialOwner id="_2_RES_1">
         <resourceAssignmentExpression>
           <formalExpression>
-            <![CDATA[#{employee}]]>
+            <![CDATA[
+            ]]>
           </formalExpression>
         </resourceAssignmentExpression>
       </potentialOwner>
@@ -101,12 +128,32 @@ kcontext.setVariable("content", contentParam);</script>
       <extensionElements>
         <tns:onEntry-script>
           <onEntry-script>
-            <tns:script>
-              <script>java.util.Map contentParam = new java.util.HashMap();
+            <onEntry-script>
+              <onEntry-script>
+                <onEntry-script>
+                  <onEntry-script>
+                    <onEntry-script>
+                      <tns:script>
+                        <script>
+                          <script>
+                            <script>
+                              <script>
+                                <script>
+                                  <script>java.util.Map contentParam = new java.util.HashMap();
 contentParam.put("reason", reason);
 contentParam.put("performance", performance);
 kcontext.setVariable("content", contentParam);</script>
-            </tns:script>
+                                </script>
+                              </script>
+                            </script>
+                          </script>
+                        </script>
+                      </tns:script>
+                    </onEntry-script>
+                  </onEntry-script>
+                </onEntry-script>
+              </onEntry-script>
+            </onEntry-script>
           </onEntry-script>
         </tns:onEntry-script>
       </extensionElements>
@@ -133,10 +180,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_3_CommentInput</targetRef>
         <assignment id="DIA_3_2_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[You need to evaluate #{employee}.]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_3_CommentInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -144,10 +193,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_3_SkippableInput</targetRef>
         <assignment id="DIA_3_3_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[false]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_3_SkippableInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -155,17 +206,20 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_3_TaskNameInput</targetRef>
         <assignment id="DIA_3_4_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[Performance Evaluation]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_3_TaskNameInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
       <potentialOwner id="_3_RES_1">
         <resourceAssignmentExpression>
           <formalExpression>
-            <![CDATA[john]]>
+            <![CDATA[
+            ]]>
           </formalExpression>
         </resourceAssignmentExpression>
       </potentialOwner>
@@ -174,12 +228,32 @@ kcontext.setVariable("content", contentParam);</script>
       <extensionElements>
         <tns:onEntry-script scriptFormat="http://www.java.com/java">
           <onEntry-script>
-            <tns:script>
-              <script>java.util.Map contentParam = new java.util.HashMap();
+            <onEntry-script>
+              <onEntry-script>
+                <onEntry-script>
+                  <onEntry-script>
+                    <onEntry-script>
+                      <tns:script>
+                        <script>
+                          <script>
+                            <script>
+                              <script>
+                                <script>
+                                  <script>java.util.Map contentParam = new java.util.HashMap();
 contentParam.put("reason", reason);
 contentParam.put("performance", performance);
 kcontext.setVariable("content", contentParam);</script>
-            </tns:script>
+                                </script>
+                              </script>
+                            </script>
+                          </script>
+                        </script>
+                      </tns:script>
+                    </onEntry-script>
+                  </onEntry-script>
+                </onEntry-script>
+              </onEntry-script>
+            </onEntry-script>
           </onEntry-script>
         </tns:onEntry-script>
       </extensionElements>
@@ -206,10 +280,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_4_CommentInput</targetRef>
         <assignment id="DIA_4_2_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[You need to evaluate #{employee}.]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_4_CommentInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -217,10 +293,12 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_4_SkippableInput</targetRef>
         <assignment id="DIA_4_3_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[false]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_4_SkippableInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
@@ -228,17 +306,20 @@ kcontext.setVariable("content", contentParam);</script>
         <targetRef>_4_TaskNameInput</targetRef>
         <assignment id="DIA_4_4_A_1">
           <from xsi:type="tFormalExpression">
-            <![CDATA[Performance Evaluation]]>
+            <![CDATA[
+            ]]>
           </from>
           <to xsi:type="tFormalExpression">
-            <![CDATA[_4_TaskNameInput]]>
+            <![CDATA[
+            ]]>
           </to>
         </assignment>
       </dataInputAssociation>
       <potentialOwner id="_4_RES_1">
         <resourceAssignmentExpression>
           <formalExpression>
-            <![CDATA[mary]]>
+            <![CDATA[
+            ]]>
           </formalExpression>
         </resourceAssignmentExpression>
       </potentialOwner>
@@ -311,56 +392,56 @@ kcontext.setVariable("content", contentParam);</script>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="_2-_5" id="Yaoqiang-_2-_5">
-        <di:waypoint x="230.78571428571422" y="83.5"/>
-        <di:waypoint x="262.7857142857142" y="77.0"/>
+        <di:waypoint x="231.0" y="83.5"/>
+        <di:waypoint x="263.0" y="77.0"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="18.96" width="6.0" x="244.0" y="70.99"/>
+          <dc:Bounds height="18.96" width="6.0" x="244.0" y="70.77"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_5-_4" id="Yaoqiang-_5-_4">
-        <di:waypoint x="287.0" y="59.21428571428578"/>
+        <di:waypoint x="287.0" y="59.0"/>
         <di:waypoint x="287.0" y="40.0"/>
-        <di:waypoint x="343.7857142857142" y="40.0"/>
+        <di:waypoint x="344.0" y="40.0"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="18.96" width="6.0" x="302.79" y="30.52"/>
+          <dc:Bounds height="18.96" width="6.0" x="303.0" y="30.52"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_5-_3" id="Yaoqiang-_5-_3">
-        <di:waypoint x="287.0" y="94.78571428571422"/>
+        <di:waypoint x="287.0" y="95.0"/>
         <di:waypoint x="287.0" y="120.0"/>
-        <di:waypoint x="343.7857142857142" y="120.0"/>
+        <di:waypoint x="344.0" y="120.0"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="18.96" width="6.0" x="299.79" y="110.52"/>
+          <dc:Bounds height="18.96" width="6.0" x="300.0" y="110.52"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_1-_2" id="Yaoqiang-_1-_2">
-        <di:waypoint x="47.78571428571422" y="72.0"/>
-        <di:waypoint x="95.78571428571422" y="83.5"/>
+        <di:waypoint x="48.0" y="72.0"/>
+        <di:waypoint x="96.0" y="83.5"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="18.96" width="6.0" x="69.0" y="68.06"/>
+          <dc:Bounds height="18.96" width="6.0" x="69.0" y="68.27"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_4-_6" id="Yaoqiang-_4-_6">
-        <di:waypoint x="479.7857142857142" y="40.0"/>
+        <di:waypoint x="480.0" y="40.0"/>
         <di:waypoint x="536.0" y="40.0"/>
-        <di:waypoint x="536.0" y="59.21428571428578"/>
+        <di:waypoint x="536.0" y="59.0"/>
         <bpmndi:BPMNLabel>
           <dc:Bounds height="18.96" width="6.0" x="514.5" y="30.52"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_3-_6" id="Yaoqiang-_3-_6">
-        <di:waypoint x="479.7857142857142" y="120.0"/>
+        <di:waypoint x="480.0" y="120.0"/>
         <di:waypoint x="537.0" y="120.0"/>
-        <di:waypoint x="537.0" y="93.78571428571422"/>
+        <di:waypoint x="537.0" y="94.0"/>
         <bpmndi:BPMNLabel>
           <dc:Bounds height="18.96" width="6.0" x="518.5" y="110.52"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_6-_7" id="Yaoqiang-_6-_7">
-        <di:waypoint x="553.7857142857142" y="77.0"/>
-        <di:waypoint x="592.7857142857142" y="72.0"/>
+        <di:waypoint x="554.0" y="77.0"/>
+        <di:waypoint x="593.0" y="72.0"/>
         <bpmndi:BPMNLabel>
-          <dc:Bounds height="18.96" width="6.0" x="570.5" y="65.24"/>
+          <dc:Bounds height="18.96" width="6.0" x="570.5" y="65.02"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

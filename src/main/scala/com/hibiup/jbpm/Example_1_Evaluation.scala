@@ -37,7 +37,7 @@ object Example_1_Evaluation {
         KieServices.Factory.get.getResources.newClassPathResource(filePath)
     }}
     
-    val environment: Kleisli[IO, Resource, RuntimeEnvironment] = Kleisli{resource => IO{
+    val environment: Kleisli[IO, Resource, RuntimeEnvironment] = Kleisli{ resource => IO{
         val userGroupCallback: UserGroupCallback = new UserGroupCallback {
             private val userGroup = Map(
                 "Administrator" -> List("Administrators").asJava,
@@ -71,14 +71,14 @@ object Example_1_Evaluation {
       *
       * 无论何种模式的会话都是线程安全的。
       * */
-    val manager: Kleisli[IO, RuntimeEnvironment, RuntimeManager] = Kleisli{environment => IO(
+    val manager: Kleisli[IO, RuntimeEnvironment, RuntimeManager] = Kleisli{ environment => IO(
         RuntimeManagerFactory.Factory.get().newSingletonRuntimeManager(environment)
     )}
 
     /**
       * 3) RuntimeManager 将 KieSession 和与之相关的流程（TaskService） 装入一个名为 RuntimeEngine 的组件以供用户使用。
       * */
-    val engine: Kleisli[IO, RuntimeManager, (RuntimeManager, RuntimeEngine)] = Kleisli{manager => IO {
+    val engine: Kleisli[IO, RuntimeManager, (RuntimeManager, RuntimeEngine)] = Kleisli{ manager => IO {
         (manager, manager.getRuntimeEngine(EmptyContext.get()))
     }}
 
@@ -87,7 +87,7 @@ object Example_1_Evaluation {
     /**
       * 4) 从 RuntimeEngine 中获得已经初始化了的 Session
       * */
-    val createSession: Kleisli[IO, RuntimeEngine, KieSession] = Kleisli{engine => IO {
+    val createSession: Kleisli[IO, RuntimeEngine, KieSession] = Kleisli{ engine => IO {
         val session = engine.getKieSession()
         /**
           * 4-1) 为 session 注册事件接收器，比如侦听流程结束事件。
@@ -169,14 +169,14 @@ object Example_1_Evaluation {
                     /**
                       * II. 获得 krisv 当前允许执行的任务
                       * */
-                    val krisv_tasks: util.List[TaskSummary] = taskService.getTasksAssignedAsPotentialOwner("krisv", "en-UK")
-                    for (task <- krisv_tasks.asScala) {
-                        println(task.getDescription)
+                    val krisv_taskSummaries: util.List[TaskSummary] = taskService.getTasksAssignedAsPotentialOwner("krisv", "en-US")
+                    for (taskSummary <- krisv_taskSummaries.asScala) {
+                        println(taskSummary.getDescription)
 
                         /**
                           * II-1) 开始执行任务
                           * */
-                        taskService.start(task.getId(), "krisv")
+                        taskService.start(taskSummary.getId(), "krisv")
 
                         /**
                           * II-2) 结束任务的同时设置 performance 变量。在这个例子中 performance 的值将被用来控制流程的流向。
@@ -184,7 +184,7 @@ object Example_1_Evaluation {
                         val results = Map[String, AnyRef](
                             "performance" -> "exceeding"
                         )
-                        taskService.complete(task.getId(), "krisv", results.asJava)
+                        taskService.complete(taskSummary.getId(), "krisv", results.asJava)
                     }
 
                     /**
@@ -192,15 +192,15 @@ object Example_1_Evaluation {
                       *
                       * krisv 的后续任务会产生 john 和 mary 两条分支。因此他们可以并发得到各自的任务。
                       * */
-                    val john_tasks = taskService.getTasksAssignedAsPotentialOwner("john", "en-UK")
-                    val mary_tasks = taskService.getTasksAssignedAsPotentialOwner("mary", "en-UK")
-                    for (task <- john_tasks.asScala) {
-                        taskService.start(task.getId(), "john")
-                        taskService.complete(task.getId(), "john", Map[String, AnyRef]("performance" -> "acceptable").asJava)
+                    val john_taskSummaries = taskService.getTasksAssignedAsPotentialOwner("john", "en-UK")
+                    val mary_taskSummaries = taskService.getTasksAssignedAsPotentialOwner("mary", "en-UK")
+                    for (taskSummary <- john_taskSummaries.asScala) {
+                        taskService.start(taskSummary.getId(), "john")
+                        taskService.complete(taskSummary.getId(), "john", Map[String, AnyRef]("performance" -> "acceptable").asJava)
                     }
-                    for (task <- mary_tasks.asScala) {
-                        taskService.start(task.getId(), "mary")
-                        taskService.complete(task.getId(), "mary", Map[String, AnyRef]("performance" -> "outstanding").asJava)
+                    for (taskSummary <- mary_taskSummaries.asScala) {
+                        taskService.start(taskSummary.getId(), "mary")
+                        taskService.complete(taskSummary.getId(), "mary", Map[String, AnyRef]("performance" -> "outstanding").asJava)
                     }
 
                     /** 任务结束后会出发事件。参考 createSession 函数 */
