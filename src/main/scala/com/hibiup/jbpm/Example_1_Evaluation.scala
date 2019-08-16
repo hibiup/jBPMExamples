@@ -6,6 +6,7 @@ import cats.data.{Kleisli, StateT}
 import cats.effect.IO
 import com.typesafe.scalalogging.Logger
 import javax.persistence.Persistence
+import org.jbpm.services.task.wih.NonManagedLocalHTWorkItemHandler
 import org.kie.api.KieServices
 import org.kie.api.event.process.{ProcessCompletedEvent, ProcessEventListener, ProcessNodeLeftEvent, ProcessNodeTriggeredEvent, ProcessStartedEvent, ProcessVariableChangedEvent}
 import org.kie.api.io.{Resource, ResourceType}
@@ -88,7 +89,7 @@ object Example_1_Evaluation {
       * 4) 从 RuntimeEngine 中获得已经初始化了的 Session
       * */
     val createSession: Kleisli[IO, RuntimeEngine, KieSession] = Kleisli{ engine => IO {
-        val session = engine.getKieSession()
+        val session = engine.getKieSession
         /**
           * 4-1) 为 session 注册事件接收器，比如侦听流程结束事件。
           * */
@@ -117,7 +118,7 @@ object Example_1_Evaluation {
       * */
     def start(engine:RuntimeEngine, processId:String, params: util.Map[String, AnyRef]):StateT[IO, KieSession, TaskService] = StateT{ session => IO{
         session.startProcess(processId, params)
-        val taskService = engine.getTaskService()
+        val taskService = engine.getTaskService
         (session, taskService)
     }}
 
