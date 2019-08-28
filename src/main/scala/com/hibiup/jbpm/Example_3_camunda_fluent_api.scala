@@ -100,11 +100,11 @@ object Example_3_camunda_fluent_api {
                             f <- optionFrom
                             t <- optionTo
                         } yield (f, t)).map {
-                            case (f1, t1) =>
-                                flow.setSource(f1)
-                                f1.getOutgoing.add(flow)
-                                flow.setTarget(t1)
-                                t1.getIncoming.add(flow)
+                            case (fromTask, toTask) =>
+                                flow.setSource(fromTask)
+                                fromTask.getOutgoing.add(flow)
+                                flow.setTarget(toTask)
+                                toTask.getIncoming.add(flow)
                                 flow
                         }
                     case _ => None
@@ -164,5 +164,44 @@ object Example_3_camunda_fluent_api {
             }.unsafeRunSync()
         }.andThen(toFile("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn"))
                 .run("Camunda Fluent API Test").unsafeRunSync()
+    }
+
+    def _testModifyFlow = {
+        implicit val cs = IO.contextShift(ExecutionContext.global)
+        read.map { model =>
+            val a = for{
+                flow1 <- Option(model.getModelElementById[SequenceFlow]("From_Start_To_Task1"))
+                flow2 <- Option(model.getModelElementById[SequenceFlow]("From_Task1_To_Task2"))
+                flow3 <- Option(model.getModelElementById[SequenceFlow]("From_Task2_To_End"))
+                task1 <- Option(model.getModelElementById[UserTask]("UserTask1"))
+                task2 <- Option(model.getModelElementById[UserTask]("UserTask2"))
+            } yield(flow1, flow2, flow3, task1, task2)
+
+            a match {
+                case Some((f1, f2, f3, t1, t2)) =>
+                    // TODO:
+                    // Clean connections for tasks
+                    val t1_incoming = t1.getIncoming
+                    t1.getIncoming.clear()
+                    t1.getIncoming.addAll(t2.getIncoming)
+                    t2.getIncoming.clear()
+                    t2.getIncoming.addAll(t1_incoming)
+
+                    val t1_outgoing = t1.getOutgoing.clone
+                    t1.getOutgoing.clear
+                    t1.getOutgoing.addAll(t2.getOutgoing)
+                    t2.getOutgoing.addAll(t1_outgoing)
+
+                    // Revers tasks
+                    val t1_pre = t1.getPreviousNodes
+                    f1.setTarget(t2)
+                    f2.setSource(t2)
+                    f2.setTarget(t1)
+                    f3.setSource(t1)
+            }
+
+            model
+        }.andThen(toFile("src/main/resources/flows/Example_3_camunda_fluent_api_modified.bpmn"))
+                .run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync()
     }
 }
