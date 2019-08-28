@@ -214,7 +214,7 @@ object Example_1_Evaluation {
             /** 全部结束，销毁 engine */
             destroyEngine(m)
         ).run(session)).run(e)}.run("flows/Example_1_Evaluation.bpmn")
-        .unsafeRunSync()  // 执行 init
-        .unsafeRunSync()  // 执行 createSession 乃至结束
-        .unsafeRunSync()
+        .unsafeRunSync()  // init
+        .unsafeRunSync()  // createSession
+        .unsafeRunSync()  // Start
 }

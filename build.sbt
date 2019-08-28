@@ -9,6 +9,7 @@ lazy val dependenciesManager = new {
     val narayanaJtaVersion = "5.9.5.Final"
     val common_ioVersion = "2.6"
     val freemarkerVersion = "2.3.28"
+    val camundaVersion  = "7.11.0"
 
     val scalaTest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
     val h2 = "com.h2database" % "h2" % h2Version % Test
@@ -33,6 +34,7 @@ lazy val dependenciesManager = new {
     val narayanaJta = "org.jboss.narayana.jta" % "narayana-jta" % narayanaJtaVersion
     val common_io = "commons-io" % "commons-io" % common_ioVersion
     val freemarker = "org.freemarker" % "freemarker" % freemarkerVersion
+    val camunda_engine = "org.camunda.bpm" % "camunda-engine" % camundaVersion
 }
 
 lazy val dependencies = Seq(
@@ -42,6 +44,13 @@ lazy val dependencies = Seq(
     dependenciesManager.scalaLogging,
     dependenciesManager.cats,
     dependenciesManager.cats_effect,
+    /**
+     * Camunda
+     */
+    dependenciesManager.camunda_engine,
+    /**
+     * jBMP
+     * */
     dependenciesManager.drools,
     dependenciesManager.drools_compiler,
     dependenciesManager.jBPM,

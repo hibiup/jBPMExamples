@@ -3,7 +3,7 @@ package com.hibiup.jbpm
 import java.io.{File, StringReader}
 import java.util.ServiceLoader
 
-import cats.data.Kleisli
+import cats.data.{Kleisli, StateT}
 import cats.effect.IO
 import javax.persistence.Persistence
 import org.jbpm.bpmn2.xml.XmlBPMNProcessDumper
@@ -23,7 +23,8 @@ import org.jbpm.shared.services.impl.TransactionalCommandService
 import org.jbpm.workflow.core.DroolsAction
 import org.jbpm.workflow.core.impl.ConnectionImpl
 import org.jbpm.workflow.core.node.{ActionNode, EndNode, HumanTaskNode}
-import org.kie.api.runtime.EnvironmentName
+import org.kie.api.runtime.manager.RuntimeEngine
+import org.kie.api.runtime.{EnvironmentName, KieSession}
 import org.kie.api.runtime.process.ProcessContext
 import org.kie.api.task.model.{OrganizationalEntity, PeopleAssignments}
 import org.kie.internal.task.api.TaskModelProvider
@@ -151,7 +152,7 @@ object Example_2_Creation {
         }
     )
     
-    def _main = process.map{resource => (environment andThen manager andThen engine).map{ case (m, e) => {
+    def _main: (KieSession, StateT[IO, RuntimeEngine, Unit]) = process.map{ resource => (environment andThen manager andThen engine).map{ case (m, e) => {
         /** Save to file*/
         save("com.hibiup","HelloBPMN","1.0", "src/main/resources/flows/Example_2_Creation.bpmn").run(resource).attempt.unsafeRunSync match {
             case Right(r) => println(s"Save successfully")
