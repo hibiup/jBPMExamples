@@ -125,35 +125,6 @@ object Example_3_camunda_fluent_api {
         Bpmn.writeModelToFile(new File(path), model)
     }}
 
-    /**
-     *
-     * */
-    def testFlow:StateT[IO, BpmnModelInstance, Unit] = StateT{ model =>
-        (for{
-            _ <- newProcess("Test_Process")
-            startNode <- addStartNode
-            endNode <- addEndNode
-            _ <- addUserTask("UserTask1")
-            _ <- addUserTask("UserTask2")
-            _ <- defineFlow("Start", "UserTask1", "From_Start_To_Task1")
-            _ <- defineFlow("UserTask1", "UserTask2", "From_Task1_To_Task2")
-            _ <- defineFlow("UserTask2", "End", "From_Task2_To_End")
-            _ <- validateModel
-            } yield ()).run(model)
-    }
-
-    def _createTestFlow = {
-        /** Creation */
-        newModel.map { model =>
-            testFlow.run(model)
-        }.map { io =>
-            io.map {
-                case (model, _) => model
-            }.unsafeRunSync()
-        }.andThen(toFile("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn"))
-                .run("Camunda Fluent API Test").unsafeRunSync()
-    }
-
     /** Enumerate loop function */
     def enum(taskCallback: (SequenceFlow, FlowNode) => Unit, sequenceFlow:util.Iterator[SequenceFlow])(implicit cs: ContextShift[IO]): IO[Unit] =
         IO.suspend {
@@ -165,4 +136,33 @@ object Example_3_camunda_fluent_api {
             }
             else IO.pure(())
         }
+
+    /**
+     *
+     * */
+    def _testCreateFlow = {
+        /** Creation */
+        def testFlow:StateT[IO, BpmnModelInstance, Unit] = StateT{ model =>
+            (for{
+                _ <- newProcess("Test_Process")
+                startNode <- addStartNode
+                endNode <- addEndNode
+                _ <- addUserTask("UserTask1")
+                _ <- addUserTask("UserTask2")
+                _ <- defineFlow("Start", "UserTask1", "From_Start_To_Task1")
+                _ <- defineFlow("UserTask1", "UserTask2", "From_Task1_To_Task2")
+                _ <- defineFlow("UserTask2", "End", "From_Task2_To_End")
+                _ <- validateModel
+            } yield ()).run(model)
+        }
+
+        newModel.map { model =>
+            testFlow.run(model)
+        }.map{ io =>
+            io.map {
+                case (model, _) => model
+            }.unsafeRunSync()
+        }.andThen(toFile("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn"))
+                .run("Camunda Fluent API Test").unsafeRunSync()
+    }
 }

@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 class Example_3_camunda_fluent_api_Test extends FlatSpec {
     "Camunda Fluent API" should "" in {
         /** Create process and add tasks */
-        _createTestFlow
+        _testCreateFlow
 
         /** Enum process tasks */
         import scala.jdk.CollectionConverters._
