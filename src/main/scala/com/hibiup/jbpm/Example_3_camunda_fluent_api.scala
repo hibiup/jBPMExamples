@@ -179,25 +179,7 @@ object Example_3_camunda_fluent_api {
 
             a match {
                 case Some((f1, f2, f3, t1, t2)) =>
-                    // TODO:
-                    // Clean connections for tasks
-                    val t1_incoming = t1.getIncoming
-                    t1.getIncoming.clear()
-                    t1.getIncoming.addAll(t2.getIncoming)
-                    t2.getIncoming.clear()
-                    t2.getIncoming.addAll(t1_incoming)
-
-                    val t1_outgoing = t1.getOutgoing.clone
-                    t1.getOutgoing.clear
-                    t1.getOutgoing.addAll(t2.getOutgoing)
-                    t2.getOutgoing.addAll(t1_outgoing)
-
-                    // Revers tasks
-                    val t1_pre = t1.getPreviousNodes
-                    f1.setTarget(t2)
-                    f2.setSource(t2)
-                    f2.setTarget(t1)
-                    f3.setSource(t1)
+                    // TODO: Reorganize process flow
             }
 
             model

@@ -33,7 +33,9 @@ class Example_3_camunda_fluent_api_Test extends FlatSpec {
         }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync()
 
 
-        import scala.jdk.CollectionConverters._
+        _testModifyFlow
+
+        /*import scala.jdk.CollectionConverters._
         // Use jBPM to test run
         PersistenceUtil.setupPoolingDataSource()
         init.map{ case (m, e) =>
@@ -53,6 +55,6 @@ class Example_3_camunda_fluent_api_Test extends FlatSpec {
             ).run(session)).run(e)}.run("flows/Example_3_camunda_fluent_api.bpmn")
                 .unsafeRunSync()  // 执行 createSession 乃至结束
                 .unsafeRunSync()  // 执行 init
-                .unsafeRunSync()
+                .unsafeRunSync()*/
     }
 }
