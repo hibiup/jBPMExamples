@@ -9,7 +9,7 @@ import org.camunda.bpm.model.bpmn.{Bpmn, BpmnModelInstance}
 
 import scala.concurrent.ExecutionContext.global
 import cats.implicits._
-import org.camunda.bpm.model.bpmn.instance.{BpmnModelElementInstance, Definitions, EndEvent, FlowNode, Process, SequenceFlow, StartEvent, UserTask}
+import org.camunda.bpm.model.bpmn.instance.{BpmnModelElementInstance, Definitions, EndEvent, FlowNode, PotentialOwner, Process, SequenceFlow, StartEvent, UserTask}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -40,16 +40,15 @@ object Example_3_camunda_fluent_api {
      * */
     import scala.reflect.ClassTag
     import scala.reflect._
-    private def createElement[T <: BpmnModelElementInstance : ClassTag](parent: BpmnModelElementInstance, id:String, setupAttributeValue: T => Unit, model: BpmnModelInstance):T = {
+    private def createElement[T <: BpmnModelElementInstance : ClassTag](parent: BpmnModelElementInstance, setupAttributeValue: T => Unit, model: BpmnModelInstance):T = {
         val element = model.newInstance(classTag[T].runtimeClass.asInstanceOf[Class[T]])
-        element.setAttributeValue("id", id, true)
         setupAttributeValue(element)
         parent.addChildElement(element)
         element
     }
 
     def newProcess(name:String): StateT[IO, BpmnModelInstance, Process] = StateT{ model => IO{
-        (model, createElement[Process](model.getDefinitions, name, _=>(), model))
+        (model, createElement[Process](model.getDefinitions, p=>p.setId(name), model))
     } }
 
     def addStartNode:StateT[IO, BpmnModelInstance, Option[StartEvent]] = StateT{model => IO {
@@ -57,7 +56,7 @@ object Example_3_camunda_fluent_api {
             if(model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
                     case process: BpmnModelElementInstance =>
-                        createElement[StartEvent](process, "Start", _=>(), model)
+                        createElement[StartEvent](process, _.setId("Start"), model)
                     case _ => null
                 }
         else null
@@ -69,7 +68,7 @@ object Example_3_camunda_fluent_api {
             if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
                     case process: BpmnModelElementInstance =>
-                        createElement[EndEvent](process, "End", _ => (), model)
+                        createElement[EndEvent](process, _.setId("End"), model)
                     case _ => null
                 }
             else null
@@ -81,7 +80,10 @@ object Example_3_camunda_fluent_api {
             if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
                     case process: BpmnModelElementInstance =>
-                        createElement[UserTask](process, taskId, _ => (), model)
+                        createElement[UserTask](process, { task =>
+                            task.setId(taskId)
+                            task.addChildElement(createElement[PotentialOwner](task, _ =>(), model ) )
+                        }, model)
                     case _ => null
                 }
             else null
@@ -93,7 +95,7 @@ object Example_3_camunda_fluent_api {
             if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
                     case process: BpmnModelElementInstance =>
-                        val flow = createElement[SequenceFlow](process, name, _ => (), model)
+                        val flow = createElement[SequenceFlow](process, _.setId(name), model)
                         val optionFrom: Option[FlowNode] = Option(model.getModelElementById(from))
                         val optionTo: Option[FlowNode] = Option(model.getModelElementById(to))
                         (for {
