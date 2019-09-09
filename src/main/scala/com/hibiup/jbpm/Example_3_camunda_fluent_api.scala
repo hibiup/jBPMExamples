@@ -3,6 +3,7 @@ package com.hibiup.jbpm
 import java.io.{File, FileInputStream}
 import java.util
 
+import cats.Applicative
 import cats.data.{Kleisli, OptionT, StateT}
 import cats.effect.{ContextShift, IO}
 import org.camunda.bpm.model.bpmn.{Bpmn, BpmnModelInstance}
@@ -168,24 +169,28 @@ object Example_3_camunda_fluent_api {
                 .run("Camunda Fluent API Test").unsafeRunSync()
     }
 
-    def _testModifyFlow = {
+    def _tesInsertNodet = {
         implicit val cs = IO.contextShift(ExecutionContext.global)
+    
+        
         read.map { model =>
-            val a = for{
-                flow1 <- Option(model.getModelElementById[SequenceFlow]("From_Start_To_Task1"))
-                flow2 <- Option(model.getModelElementById[SequenceFlow]("From_Task1_To_Task2"))
-                flow3 <- Option(model.getModelElementById[SequenceFlow]("From_Task2_To_End"))
-                task1 <- Option(model.getModelElementById[UserTask]("UserTask1"))
-                task2 <- Option(model.getModelElementById[UserTask]("UserTask2"))
-            } yield(flow1, flow2, flow3, task1, task2)
+            val a: IO[(Option[UserTask], Option[BpmnModelElementInstance])] = for{
+                newTask <- addUserTask("UserTaskNew").run(model).map(_._2)
+                task <- IO(Option[BpmnModelElementInstance](model.getModelElementById("UserTask2")))
+            } yield(newTask, task)
 
-            a match {
-                case Some((f1, f2, f3, t1, t2)) =>
+            a.map{
+                case (Some(t1), Some(t2:UserTask)) =>
                     // TODO: Reorganize process flow
-            }
-
-            model
-        }.andThen(toFile("src/main/resources/flows/Example_3_camunda_fluent_api_modified.bpmn"))
-                .run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync()
+                    t1.getIncoming.clear()
+                    t2.getIncoming.asScala.foreach{ flow =>
+                        flow.setTarget(t1)
+                        t1.getIncoming.add(flow)
+                    }
+                    //t2.getIncoming.clear()
+                    defineFlow(t1.getId, t2.getId, "t1-2-t2")
+            }.map(_ => model)
+              .map(toFile("src/main/resources/flows/Example_3_camunda_fluent_api_modified.bpmn").run(_))
+        }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").flatten.unsafeRunSync()//.unsafeRunSync().unsafeRunSync()
     }
 }
