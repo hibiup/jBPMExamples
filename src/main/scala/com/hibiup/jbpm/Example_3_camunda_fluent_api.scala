@@ -59,6 +59,7 @@ object Example_3_camunda_fluent_api {
                 } )
     }
 
+
     def newProcess(name:String): StateT[IO, BpmnModelInstance, Process] = StateT{ model => IO{
         (model, createElement[Process](model.getDefinitions, p=>p.setId(name), model))
     } }
@@ -71,7 +72,7 @@ object Example_3_camunda_fluent_api {
                         createElement[StartEvent](process, _.setId("Start"), model)
                     case _ => null
                 }
-        else null
+            else null
         } )
     } }
 
@@ -104,49 +105,28 @@ object Example_3_camunda_fluent_api {
 
     def createFlow(from:String, to:String):StateT[IO, BpmnModelInstance, Option[SequenceFlow]] = StateT{ model => IO{
         (model,
-            if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
-                model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
-                    case process: BpmnModelElementInstance =>
-                        val flow = createElement[SequenceFlow](process, _.setId(s"""$from-$to"""), model)
-                        val optionFrom: Option[FlowNode] = Option(model.getModelElementById(from))
-                        val optionTo: Option[FlowNode] = Option(model.getModelElementById(to))
-                        (for {
-                            f <- optionFrom
-                            t <- optionTo
-                        } yield (f, t)).map {
-                            case (fromTask, toTask) =>
-                                flow.setSource(fromTask)
-                                fromTask.getOutgoing.add(flow)
-                                flow.setTarget(toTask)
-                                toTask.getIncoming.add(flow)
-                                flow
-                        }
-                    case _ => None
-                }
-            else None
+                if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
+                    model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
+                        case process: BpmnModelElementInstance =>
+                            val flow = createElement[SequenceFlow](process, _.setId(s"""$from-$to"""), model)
+                            val optionFrom: Option[FlowNode] = Option(model.getModelElementById(from))
+                            val optionTo: Option[FlowNode] = Option(model.getModelElementById(to))
+                            (for {
+                                f <- optionFrom
+                                t <- optionTo
+                            } yield (f, t)).map {
+                                case (fromTask, toTask) =>
+                                    flow.setSource(fromTask)
+                                    fromTask.getOutgoing.add(flow)
+                                    flow.setTarget(toTask)
+                                    toTask.getIncoming.add(flow)
+                                    flow
+                            }
+                        case _ => None
+                    }
+                else None
         )
     } }
-
-    def insertFront(name:String, toFront:String): StateT[IO, BpmnModelInstance, Unit] =
-        for{
-            newTask <- newUserTask(name)
-            t <- StateT[IO, BpmnModelInstance, Option[UserTask]]{ model => IO{
-                (model, Option(model.getModelElementById[UserTask](toFront)))
-            }}
-            _ <- optIn(newTask.get, t.get)
-        } yield()
-
-    def moveToFront(name:String, toFront:String):StateT[IO, BpmnModelInstance, Unit] = StateT{ model =>
-        (Option(model.getModelElementById[UserTask](name)), Option(model.getModelElementById[UserTask](toFront))) match {
-            case (Some(t1), Some(t2)) =>
-                (for {
-                    _ <- optOut(t1)
-                    _ <- optIn(t1, t2)
-                } yield ()).run(model)
-
-            case _ => IO((model,()))
-        }
-    }
 
     private def optIn(t1:UserTask, t2:UserTask):StateT[IO, BpmnModelInstance, Unit] = for {
         _ <- StateT[IO, BpmnModelInstance, Any]{ model => IO{
@@ -178,6 +158,28 @@ object Example_3_camunda_fluent_api {
             node.getIncoming.clear()
         }))
     } }
+
+    def insertFront(name:String, toFront:String): StateT[IO, BpmnModelInstance, Unit] =
+        for{
+            newTask <- newUserTask(name)
+            t <- StateT[IO, BpmnModelInstance, Option[UserTask]]{ model => IO{
+                (model, Option(model.getModelElementById[UserTask](toFront)))
+            }}
+            _ <- optIn(newTask.get, t.get)
+        } yield()
+
+    def moveToFront(name:String, toFront:String):StateT[IO, BpmnModelInstance, Unit] = StateT{ model =>
+        (Option(model.getModelElementById[UserTask](name)), Option(model.getModelElementById[UserTask](toFront))) match {
+            case (Some(t1), Some(t2)) =>
+                (for {
+                    _ <- optOut(t1)
+                    _ <- optIn(t1, t2)
+                } yield ()).run(model)
+
+            case _ => IO((model,()))
+        }
+    }
+
 
     def remove(name:String):StateT[IO, BpmnModelInstance, Unit] = for {
         t <- StateT[IO, BpmnModelInstance, Option[UserTask]]{ model => IO{
