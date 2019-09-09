@@ -36,6 +36,8 @@ class Example_3_camunda_fluent_api_Test extends FlatSpec {
 
         _testMoveNode
 
+        _testRemoveNode
+
         /*import scala.jdk.CollectionConverters._
         // Use jBPM to test run
         PersistenceUtil.setupPoolingDataSource()

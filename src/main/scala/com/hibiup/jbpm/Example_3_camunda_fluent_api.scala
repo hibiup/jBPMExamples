@@ -130,57 +130,64 @@ object Example_3_camunda_fluent_api {
     def insertFront(name:String, toFront:String): StateT[IO, BpmnModelInstance, Unit] =
         for{
             newTask <- newUserTask(name)
-            // Update flow to connect to the new task
-            _ <- StateT[IO, BpmnModelInstance, Option[Unit]]{ model => IO{
-                (newTask, Option(model.getModelElementById[UserTask](toFront))) match {
-                    case (Some(t1), Some(t2:UserTask)) =>
-                        t1.getIncoming.clear()
-                        t2.getIncoming.asScala.foreach{ flow =>
-                            flow.setId(flow.getId.replace(s"-${t2.getId}", s"-${t1.getId}"))
-                            flow.setTarget(t1)
-                            t1.getIncoming.add(flow)
-                        }
-                        t2.getIncoming.clear()
-                        (model, Option())
-                    case _ => (model, None)
-                }
+            t <- StateT[IO, BpmnModelInstance, Option[UserTask]]{ model => IO{
+                (model, Option(model.getModelElementById[UserTask](toFront)))
             }}
-            // Add new flow from new task to the old one
-            p <- createFlow(name, toFront)
+            _ <- optIn(newTask.get, t.get)
         } yield()
 
     def moveToFront(name:String, toFront:String):StateT[IO, BpmnModelInstance, Unit] = StateT{ model =>
         (Option(model.getModelElementById[UserTask](name)), Option(model.getModelElementById[UserTask](toFront))) match {
             case (Some(t1), Some(t2)) =>
-                // Opt out
-                t1.getIncoming.forEach(upStream => {
-                    t1.getOutgoing.forEach(downStream => {
-                        // Connect upStream to downStream
-                        createFlow(upStream.getSource.getId, downStream.getTarget.getId).run(model).unsafeRunSync()
-                        downStream.getTarget.getIncoming.remove(downStream)
-                        removeElement(downStream.getId, model)
-                    })
-                    // Remove old downStream
-                    t1.getOutgoing.clear()
+                (for {
+                    _ <- optOut(t1)
+                    _ <- optIn(t1, t2)
+                } yield ()).run(model)
 
-                    // Remove old upStream
-                    upStream.getSource.getOutgoing.remove(upStream)
-                    removeElement(upStream.getId, model)
-                })
-                t1.getIncoming.clear()
-
-                // Opt in
-                t2.getIncoming.forEach(upStream => {
-                    createFlow(upStream.getSource.getId, t1.getId).run(model).unsafeRunSync()
-                    upStream.getSource.getOutgoing.remove(upStream)
-                    removeElement(upStream.getId, model)
-                })
-                t2.getIncoming.clear()
-
-                createFlow(t1.getId, t2.getId).map(_=>()).run(model)
             case _ => IO((model,()))
         }
     }
+
+    private def optIn(t1:UserTask, t2:UserTask):StateT[IO, BpmnModelInstance, Unit] = for {
+        _ <- StateT[IO, BpmnModelInstance, Any]{ model => IO{
+            t2.getIncoming.forEach { upStream =>
+                upStream.setId(upStream.getId.replace(s"-${t2.getId}", s"-${t1.getId}"))
+                upStream.setTarget(t1)
+                t1.getIncoming.add(upStream)
+            }
+            t2.getIncoming.clear()
+            (model, ())
+        }}
+        p <- createFlow(t1.getId, t2.getId)
+    } yield p
+
+    private def optOut(node:UserTask):StateT[IO, BpmnModelInstance, Unit] = StateT { model => IO{
+        (model, node.getIncoming.forEach(upStream => {
+            node.getOutgoing.forEach(downStream => {
+                // Connect upStream to downStream
+                createFlow(upStream.getSource.getId, downStream.getTarget.getId).run(model).unsafeRunSync()
+                downStream.getTarget.getIncoming.remove(downStream)
+                removeElement(downStream.getId, model)
+            })
+            // Remove old downStream
+            node.getOutgoing.clear()
+
+            // Remove old upStream
+            upStream.getSource.getOutgoing.remove(upStream)
+            removeElement(upStream.getId, model)
+            node.getIncoming.clear()
+        }))
+    } }
+
+    def remove(name:String):StateT[IO, BpmnModelInstance, Unit] = for {
+        t <- StateT[IO, BpmnModelInstance, Option[UserTask]]{ model => IO{
+            (model, Option(model.getModelElementById[UserTask](name)))
+        }}
+        _ <- optOut(t.get)
+        _ <- StateT[IO, BpmnModelInstance, Unit] {model => IO{
+            (model, removeElement(t.get.getId, model))
+        }}
+    } yield()
 
     def validateModel:StateT[IO, BpmnModelInstance, Unit] = StateT { model => IO {
         (model, Bpmn.validateModel(model))
@@ -254,6 +261,16 @@ object Example_3_camunda_fluent_api {
         read.map { model =>
             moveToFront("UserTask3", "UserTask1").run(model).map{
                 case (m, _) => toFile("src/main/resources/flows/Example_3_camunda_fluent_api_moved.bpmn").run(m)
+            }
+        }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync().unsafeRunSync()
+    }
+
+    def _testRemoveNode = {
+        implicit val cs = IO.contextShift(ExecutionContext.global)
+
+        read.map { model =>
+            remove("UserTask2").run(model).map{
+                case (m, _) => toFile("src/main/resources/flows/Example_3_camunda_fluent_api_removed.bpmn").run(m)
             }
         }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync().unsafeRunSync()
     }
