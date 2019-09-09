@@ -104,27 +104,26 @@ object Example_3_camunda_fluent_api {
     } }
 
     def createFlow(from:String, to:String):StateT[IO, BpmnModelInstance, Option[SequenceFlow]] = StateT{ model => IO{
-        (model,
-                if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
-                    model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
-                        case process: BpmnModelElementInstance =>
-                            val flow = createElement[SequenceFlow](process, _.setId(s"""$from-$to"""), model)
-                            val optionFrom: Option[FlowNode] = Option(model.getModelElementById(from))
-                            val optionTo: Option[FlowNode] = Option(model.getModelElementById(to))
-                            (for {
-                                f <- optionFrom
-                                t <- optionTo
-                            } yield (f, t)).map {
-                                case (fromTask, toTask) =>
-                                    flow.setSource(fromTask)
-                                    fromTask.getOutgoing.add(flow)
-                                    flow.setTarget(toTask)
-                                    toTask.getIncoming.add(flow)
-                                    flow
-                            }
-                        case _ => None
+        (model, if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
+            model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
+                case process: BpmnModelElementInstance =>
+                    val flow = createElement[SequenceFlow](process, _.setId(s"""$from-$to"""), model)
+                    val optionFrom: Option[FlowNode] = Option(model.getModelElementById(from))
+                    val optionTo: Option[FlowNode] = Option(model.getModelElementById(to))
+                    (for {
+                        f <- optionFrom
+                        t <- optionTo
+                    } yield (f, t)).map {
+                        case (fromTask, toTask) =>
+                            flow.setSource(fromTask)
+                            fromTask.getOutgoing.add(flow)
+                            flow.setTarget(toTask)
+                            toTask.getIncoming.add(flow)
+                            flow
                     }
-                else None
+                case _ => None
+            }
+            else None
         )
     } }
 
@@ -138,8 +137,8 @@ object Example_3_camunda_fluent_api {
             t2.getIncoming.clear()
             (model, ())
         }}
-        p <- createFlow(t1.getId, t2.getId)
-    } yield p
+        _ <- createFlow(t1.getId, t2.getId)
+    } yield ()
 
     private def optOut(node:UserTask):StateT[IO, BpmnModelInstance, Unit] = StateT { model => IO{
         (model, node.getIncoming.forEach(upStream => {
