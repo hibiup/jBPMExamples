@@ -32,8 +32,9 @@ class Example_3_camunda_fluent_api_Test extends FlatSpec {
             }
         }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync()
     
-    
-        _tesInsertNode
+        _testInsertNode
+
+        _testMoveNode
 
         /*import scala.jdk.CollectionConverters._
         // Use jBPM to test run

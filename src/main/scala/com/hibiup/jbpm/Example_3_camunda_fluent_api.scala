@@ -50,6 +50,15 @@ object Example_3_camunda_fluent_api {
         element
     }
 
+    private def removeElement(name:String, model: BpmnModelInstance):Unit = {
+        if(model.getModelElementsByType[Process](classOf[Process]).size > 0)
+            model.getModelElementsByType[Process](classOf[Process]).forEach(process =>
+                Option(model.getModelElementById[BpmnModelElementInstance](name)) match {
+                        case Some(element) =>
+                            process.removeChildElement(element)
+                } )
+    }
+
     def newProcess(name:String): StateT[IO, BpmnModelInstance, Process] = StateT{ model => IO{
         (model, createElement[Process](model.getDefinitions, p=>p.setId(name), model))
     } }
@@ -78,7 +87,7 @@ object Example_3_camunda_fluent_api {
         } )
     } }
 
-    def addUserTask(taskId:String):StateT[IO, BpmnModelInstance, Option[UserTask]] = StateT{ model => IO{
+    def newUserTask(taskId:String):StateT[IO, BpmnModelInstance, Option[UserTask]] = StateT{ model => IO{
         (model, Option {
             if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
@@ -93,7 +102,7 @@ object Example_3_camunda_fluent_api {
         } )
     } }
 
-    def defineFlow(from:String, to:String):StateT[IO, BpmnModelInstance, Option[SequenceFlow]] = StateT{ model => IO{
+    def createFlow(from:String, to:String):StateT[IO, BpmnModelInstance, Option[SequenceFlow]] = StateT{ model => IO{
         (model,
             if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
@@ -118,11 +127,12 @@ object Example_3_camunda_fluent_api {
         )
     } }
 
-    def insertUserTask(name:String, before:String): StateT[IO, BpmnModelInstance, Try[Unit]] =
-        (for{
-            newTask <- addUserTask("UserTaskNew")
+    def insertFront(name:String, toFront:String): StateT[IO, BpmnModelInstance, Unit] =
+        for{
+            newTask <- newUserTask(name)
+            // Update flow to connect to the new task
             _ <- StateT[IO, BpmnModelInstance, Option[Unit]]{ model => IO{
-                (newTask, Option(model.getModelElementById[UserTask](before))) match {
+                (newTask, Option(model.getModelElementById[UserTask](toFront))) match {
                     case (Some(t1), Some(t2:UserTask)) =>
                         t1.getIncoming.clear()
                         t2.getIncoming.asScala.foreach{ flow =>
@@ -135,11 +145,42 @@ object Example_3_camunda_fluent_api {
                     case _ => (model, None)
                 }
             }}
-            p <- defineFlow(name, before)
-        } yield p).map{
-            case _: Some[_] => Success(())
-            case _ => Failure(new RuntimeException(""))
+            // Add new flow from new task to the old one
+            p <- createFlow(name, toFront)
+        } yield()
+
+    def moveToFront(name:String, toFront:String):StateT[IO, BpmnModelInstance, Unit] = StateT{ model =>
+        (Option(model.getModelElementById[UserTask](name)), Option(model.getModelElementById[UserTask](toFront))) match {
+            case (Some(t1), Some(t2)) =>
+                // Opt out
+                t1.getIncoming.forEach(upStream => {
+                    t1.getOutgoing.forEach(downStream => {
+                        // Connect upStream to downStream
+                        createFlow(upStream.getSource.getId, downStream.getTarget.getId).run(model).unsafeRunSync()
+                        downStream.getTarget.getIncoming.remove(downStream)
+                        removeElement(downStream.getId, model)
+                    })
+                    // Remove old downStream
+                    t1.getOutgoing.clear()
+
+                    // Remove old upStream
+                    upStream.getSource.getOutgoing.remove(upStream)
+                    removeElement(upStream.getId, model)
+                })
+                t1.getIncoming.clear()
+
+                // Opt in
+                t2.getIncoming.forEach(upStream => {
+                    createFlow(upStream.getSource.getId, t1.getId).run(model).unsafeRunSync()
+                    upStream.getSource.getOutgoing.remove(upStream)
+                    removeElement(upStream.getId, model)
+                })
+                t2.getIncoming.clear()
+
+                createFlow(t1.getId, t2.getId).map(_=>()).run(model)
+            case _ => IO((model,()))
         }
+    }
 
     def validateModel:StateT[IO, BpmnModelInstance, Unit] = StateT { model => IO {
         (model, Bpmn.validateModel(model))
@@ -165,8 +206,9 @@ object Example_3_camunda_fluent_api {
             else IO.pure(())
         }
 
+
     /**
-     *
+     * Test functions
      * */
     def _testCreateFlow = {
         /** Creation */
@@ -175,13 +217,13 @@ object Example_3_camunda_fluent_api {
                 _ <- newProcess("Test_Process")
                 startNode <- addStartNode
                 endNode <- addEndNode
-                _ <- addUserTask("UserTask1")
-                _ <- addUserTask("UserTask2")
-                _ <- addUserTask("UserTask3")
-                _ <- defineFlow("Start", "UserTask1")
-                _ <- defineFlow("UserTask1", "UserTask2")
-                _ <- defineFlow("UserTask2", "UserTask3")
-                _ <- defineFlow("UserTask3", "End")
+                _ <- newUserTask("UserTask1")
+                _ <- newUserTask("UserTask2")
+                _ <- newUserTask("UserTask3")
+                _ <- createFlow("Start", "UserTask1")
+                _ <- createFlow("UserTask1", "UserTask2")
+                _ <- createFlow("UserTask2", "UserTask3")
+                _ <- createFlow("UserTask3", "End")
                 _ <- validateModel
             } yield ()).run(model)
         }
@@ -196,27 +238,13 @@ object Example_3_camunda_fluent_api {
                 .run("Camunda Fluent API Test").unsafeRunSync()
     }
 
-    def _tesInsertNode = {
+    def _testInsertNode = {
         implicit val cs = IO.contextShift(ExecutionContext.global)
 
         read.map { model =>
-            val a: IO[(Option[UserTask], Option[BpmnModelElementInstance])] = for{
-                newTask <- addUserTask("UserTaskNew").run(model).map(_._2)
-                task <- IO(Option[BpmnModelElementInstance](model.getModelElementById("UserTask3")))
-            } yield(newTask, task)
-
-            a.map{
-                case (Some(t1), Some(t2:UserTask)) =>
-                    // TODO: Reorganize process flow
-                    t1.getIncoming.clear()
-                    t2.getIncoming.asScala.foreach{ flow =>
-                        flow.setId(flow.getId.replace(s"-${t2.getId}", s"-${t1.getId}"))
-                        flow.setTarget(t1)
-                        t1.getIncoming.add(flow)
-                    }
-                    t2.getIncoming.clear()
-                    defineFlow(t1.getId, t2.getId).run(model).map(_._1).unsafeRunSync()
-            }.map(toFile("src/main/resources/flows/Example_3_camunda_fluent_api_modified.bpmn").run)
+            insertFront("NewTask", "UserTask3").run(model).map{
+                case (m, _) => toFile("src/main/resources/flows/Example_3_camunda_fluent_api_inserted.bpmn").run(m)
+            }
         }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync().unsafeRunSync()
     }
 
@@ -224,7 +252,9 @@ object Example_3_camunda_fluent_api {
         implicit val cs = IO.contextShift(ExecutionContext.global)
 
         read.map { model =>
-            ???
-        }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn")
+            moveToFront("UserTask3", "UserTask1").run(model).map{
+                case (m, _) => toFile("src/main/resources/flows/Example_3_camunda_fluent_api_moved.bpmn").run(m)
+            }
+        }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync().unsafeRunSync()
     }
 }
