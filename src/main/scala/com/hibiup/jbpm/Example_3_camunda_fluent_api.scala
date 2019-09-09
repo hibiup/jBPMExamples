@@ -91,12 +91,12 @@ object Example_3_camunda_fluent_api {
         } )
     } }
 
-    def defineFlow(from:String, to:String, name:String):StateT[IO, BpmnModelInstance, Option[SequenceFlow]] = StateT{ model => IO{
+    def defineFlow(from:String, to:String/*, name:String*/):StateT[IO, BpmnModelInstance, Option[SequenceFlow]] = StateT{ model => IO{
         (model,
             if (model.getModelElementsByType[Process](classOf[Process]).size > 0)
                 model.getModelElementsByType[Process](classOf[Process]).asScala.head match {
                     case process: BpmnModelElementInstance =>
-                        val flow = createElement[SequenceFlow](process, _.setId(name), model)
+                        val flow = createElement[SequenceFlow](process, _.setId(s"""$from-$to"""), model)
                         val optionFrom: Option[FlowNode] = Option(model.getModelElementById(from))
                         val optionTo: Option[FlowNode] = Option(model.getModelElementById(to))
                         (for {
@@ -152,9 +152,9 @@ object Example_3_camunda_fluent_api {
                 endNode <- addEndNode
                 _ <- addUserTask("UserTask1")
                 _ <- addUserTask("UserTask2")
-                _ <- defineFlow("Start", "UserTask1", "From_Start_To_Task1")
-                _ <- defineFlow("UserTask1", "UserTask2", "From_Task1_To_Task2")
-                _ <- defineFlow("UserTask2", "End", "From_Task2_To_End")
+                _ <- defineFlow("Start", "UserTask1")
+                _ <- defineFlow("UserTask1", "UserTask2")
+                _ <- defineFlow("UserTask2", "End")
                 _ <- validateModel
             } yield ()).run(model)
         }
@@ -171,8 +171,7 @@ object Example_3_camunda_fluent_api {
 
     def _tesInsertNodet = {
         implicit val cs = IO.contextShift(ExecutionContext.global)
-    
-        
+
         read.map { model =>
             val a: IO[(Option[UserTask], Option[BpmnModelElementInstance])] = for{
                 newTask <- addUserTask("UserTaskNew").run(model).map(_._2)
@@ -184,13 +183,13 @@ object Example_3_camunda_fluent_api {
                     // TODO: Reorganize process flow
                     t1.getIncoming.clear()
                     t2.getIncoming.asScala.foreach{ flow =>
+                        flow.setId(flow.getId.replace(s"-${t2.getId}", s"-${t1.getId}"))
                         flow.setTarget(t1)
                         t1.getIncoming.add(flow)
                     }
-                    //t2.getIncoming.clear()
-                    defineFlow(t1.getId, t2.getId, "t1-2-t2")
-            }.map(_ => model)
-              .map(toFile("src/main/resources/flows/Example_3_camunda_fluent_api_modified.bpmn").run(_))
-        }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").flatten.unsafeRunSync()//.unsafeRunSync().unsafeRunSync()
+                    t2.getIncoming.clear()
+                    defineFlow(t1.getId, t2.getId).run(model).map(_._1).unsafeRunSync()
+            }.map(a => toFile("src/main/resources/flows/Example_3_camunda_fluent_api_modified.bpmn").run(a))
+        }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync().unsafeRunSync()
     }
 }
