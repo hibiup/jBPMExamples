@@ -27,7 +27,7 @@ class Example_3_camunda_fluent_api_Test extends FlatSpec {
                 case Some(startNode:StartEvent) => {
                     println(startNode.getId)
                     // Call to enumeration
-                    enum((flow, task) => println(s"""Flow: ${flow.getId} => Task: ${task.getId}"""), startNode.getOutgoing.iterator)
+                    enum((flow, task) => println(s"""Flow: ${flow.getId} => Task: ${task.getId}"""), startNode/*.getOutgoing.iterator*/)
                 }
             }
         }.run("src/main/resources/flows/Example_3_camunda_fluent_api.bpmn").unsafeRunSync().unsafeRunSync()

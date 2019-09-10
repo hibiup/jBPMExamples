@@ -203,13 +203,14 @@ object Example_3_camunda_fluent_api {
     }}
 
     /** Enumerate loop function */
-    def enum(taskCallback: (SequenceFlow, FlowNode) => Unit, sequenceFlow:util.Iterator[SequenceFlow])(implicit cs: ContextShift[IO]): IO[Unit] =
+    def enum(taskCallback: (SequenceFlow, FlowNode) => Unit, start: FlowNode)(implicit cs: ContextShift[IO]): IO[Unit] =
         IO.suspend {
+            val sequenceFlow = start.getOutgoing.iterator()
             if(sequenceFlow.hasNext) {
                 val flow = sequenceFlow.next
-                val task = flow.getTarget
-                taskCallback(flow, task)
-                enum(taskCallback, task.getOutgoing.iterator())
+                val next = flow.getTarget
+                taskCallback(flow, next)
+                enum(taskCallback, next)
             }
             else IO.pure(())
         }
